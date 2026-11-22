@@ -3,7 +3,7 @@ import hashlib
 import datetime as dt
 
 import pronotepy
-from pronotepy.ent import ent_hdf
+from pronotepy.ent import educonnect
 
 URL = "https://0590143k.index-education.net/pronote/eleve.html"
 JOURS_AVANT = 7
@@ -61,7 +61,7 @@ def main():
         URL,
         username=os.environ["PRONOTE_USER"],
         password=os.environ["PRONOTE_PASS"],
-        ent=ent_hdf,
+        ent=educonnect,
     )
     if not client.logged_in:
         raise SystemExit("Connexion à Pronote impossible")
