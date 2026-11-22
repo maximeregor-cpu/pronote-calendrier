@@ -1,8 +1,8 @@
-name: Mise à jour emploi du temps
+name: Synchroniser Pronote
 
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "15 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -12,27 +12,33 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Installer Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.11"
 
-      - run: pip install pronotepy
+      - name: Installer pronotepy
+        run: pip install pronotepy
 
-      - run: python sync.py
+      - name: Générer edt.ics
         env:
           PRONOTE_USER: ${{ secrets.PRONOTE_USER }}
           PRONOTE_PASS: ${{ secrets.PRONOTE_PASS }}
+        run: python sync.py
 
-      - name: Publier le calendrier
+      - name: Publier edt.ics sur gh-pages
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p public
+          cp edt.ics public/edt.ics
+          cd public
+          git init
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
           git add edt.ics
-          if git diff --cached --quiet -I'^DTSTAMP' -- edt.ics; then
-            echo "Aucun changement"
-          else
-            git commit -m "Mise à jour de l'emploi du temps"
-            git push
-          fi
+          git commit -m "Mise à jour EDT"
+          git branch -M gh-pages
+          git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          git push -f origin gh-pages
